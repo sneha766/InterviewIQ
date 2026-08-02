@@ -1,33 +1,41 @@
-import { Sparkles } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
-const suggestions = [
-  "Add more React projects to improve ATS score.",
-  "Practice JavaScript coding interviews.",
-  "Your communication score can be improved.",
-  "Upload an updated resume.",
-];
+interface Props {
+  suggestions: string[];
+}
 
-export default function AISuggestions() {
+export default function AISuggestions({
+  suggestions,
+}: Props) {
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-2">
-        <Sparkles className="text-blue-600" />
+    <Card className="rounded-2xl shadow-sm">
+      <CardHeader>
+        <CardTitle>AI Suggestions</CardTitle>
+      </CardHeader>
 
-        <h2 className="text-xl font-semibold">
-          AI Suggestions
-        </h2>
-      </div>
-
-      <div className="space-y-4">
-        {suggestions.map((tip) => (
-          <div
-            key={tip}
-            className="rounded-xl bg-slate-100 p-4 text-sm"
-          >
-            {tip}
-          </div>
-        ))}
-      </div>
-    </div>
+      <CardContent>
+        {suggestions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No suggestions available.
+          </p>
+        ) : (
+          <ul className="space-y-3 list-disc pl-5">
+            {suggestions.map((item, index) => (
+              <li
+                key={index}
+                className="text-sm"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

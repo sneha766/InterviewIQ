@@ -3,14 +3,14 @@ import { TrendingUp } from "lucide-react";
 interface StatsCardProps {
   title: string;
   value: string;
-  change: string;
+  subtitle: string;
   icon: LucideIcon;
 }
 
 export default function StatsCard({
   title,
   value,
-  change,
+  subtitle,
   icon: Icon,
 }: StatsCardProps) {
   return (
@@ -23,7 +23,7 @@ export default function StatsCard({
 
           <div className="mt-4 flex items-center gap-2 text-sm text-emerald-600">
             <TrendingUp size={16} />
-            {change}
+            {subtitle}
           </div>
         </div>
 

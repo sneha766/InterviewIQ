@@ -5,15 +5,24 @@ import AppError from "../utils/AppError";
 import { extractPdfText } from "../utils/pdfExtractor";
 import { tailorResume } from "../ai/tailorResume";
 import { incrementTailorUsage } from "../utils/usage";
+import { checkTailorLimit } from "./usageGuard.service";
+
+export interface TailorResumeInput {
+    userId: string;
+    file: Express.Multer.File;
+    jobDescription: string;
+}
 
 export const tailorResumeService = async (
-  req: Request
+  input: TailorResumeInput
 ) => {
-  if (!req.file) {
+  
+  if (!input.file) {
     throw new AppError("Resume is required.", 400);
   }
+  await checkTailorLimit(input.userId);
 
-  const { jobDescription } = req.body;
+  const { jobDescription } = input.jobDescription ? { jobDescription: input.jobDescription } : {};
 
   if (!jobDescription) {
     throw new AppError(
@@ -23,19 +32,20 @@ export const tailorResumeService = async (
   }
 
   try {
-    const resume = await extractPdfText(req.file.path);
+    
+    const resume = await extractPdfText(input.file.path);
 
     const result = await tailorResume(
       resume,
       jobDescription
     );
 
-    await incrementTailorUsage(req.user!.id);
+    await incrementTailorUsage(input.userId);
 
     return result;
   } finally {
-    if (req.file?.path) {
-      await fs.unlink(req.file.path).catch(() => {});
+    if (input.file?.path) {
+      await fs.unlink(input.file.path).catch(() => {});
     }
   }
 };

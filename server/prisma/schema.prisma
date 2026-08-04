@@ -6,76 +6,78 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum Plan {
   FREE
   PRO
 }
 
 model User {
-  id          String            @id @default(cuid())
-  name        String
-  email       String            @unique
-  password    String
+  id String @id @default(cuid())
 
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  clerkId String @unique
 
-  resumes     ResumeAnalysis[]
-  interviews  Interview[]
+  email    String  @unique
+  name     String?
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   plan Plan @default(FREE)
 
-  stripeCustomerId String?
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  subscriptionStatus   String?
 
-  stripeSubscriptionId String?
+  resumes           ResumeAnalysis[]
+  interviews        Interview[]
+  usage             Usage[]
+  codingSubmissions CodingSubmission[]
 
-  subscriptionStatus String?
-
-  usage Usage[]
-
-  
+  @@index([clerkId])
 }
 
 model ResumeAnalysis {
-  id            String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  fileName      String
-  fileUrl       String
+  fileName String
+  fileUrl  String
 
-  overallScore  Int
-  analysis      Json
+  overallScore Int
+  analysis     Json
 
-  userId        String
+  userId String
 
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model Interview {
-  id            String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId        String
+  userId String
 
-  type          InterviewType
-  role          String
-  difficulty    Difficulty
+  type       InterviewType
+  role       String
+  difficulty Difficulty
 
-  questions     Json
-  answers       Json?
-  feedback      Json?
+  questions Json
+  answers   Json?
+  feedback  Json?
 
-  score         Int?
+  score Int?
 
-  completed     Boolean @default(false)
+  completed Boolean @default(false)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -91,6 +93,7 @@ enum Difficulty {
   MEDIUM
   HARD
 }
+
 model Usage {
   id String @id @default(cuid())
 
@@ -112,4 +115,56 @@ model Usage {
 
   @@unique([userId, usageDate])
   @@index([userId])
+}
+
+model CodingProblem {
+  id             String @id @default(cuid())
+  title          String
+  slug           String @unique
+  difficulty     String
+  description    String
+  acceptanceRate Float
+
+  constraints Json
+  examples    Json
+  hints       Json
+  tags        Json
+  starterCode Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions CodingSubmission[]
+
+  @@index([difficulty])
+}
+
+model CodingSubmission {
+  id String @id @default(cuid())
+
+  userId    String
+  problemId String
+
+  language String
+  code     String
+
+  stdout        String? @default("")
+  stderr        String? @default("")
+  compileOutput String? @default("")
+
+  runtime String? @default("")
+  memory  String? @default("")
+
+  status String @default("Pending")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([createdAt])
+  @@index([status])
 }

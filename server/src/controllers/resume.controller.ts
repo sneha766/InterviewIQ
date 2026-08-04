@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import * as ResumeService from "../services/resume.service";
 import { ResumeHistoryQuerySchema } from "../schemas/resumeHistory";
-
+import { getAuthenticatedUser } from "../utils/auth";
+import AppError from "../utils/AppError";
 
 export const analyzeResume = async (
   req: Request,
@@ -10,7 +11,16 @@ export const analyzeResume = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const result = await ResumeService.analyzeResume(req);
+    const user = await getAuthenticatedUser(req);
+
+    if (!req.file) {
+      throw new AppError("Resume is required.", 400);
+    }
+
+    const result = await ResumeService.analyzeResume({
+      userId: user.id,
+      file: req.file,
+    });
 
     res.status(201).json({
       success: true,
@@ -24,17 +34,14 @@ export const analyzeResume = async (
 export const getResumeHistory = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const query =
-      ResumeHistoryQuerySchema.parse(req.query);
+    const query = ResumeHistoryQuerySchema.parse(req.query);
 
-    const result =
-      await ResumeService.getResumeHistory(
-        req.user!.id,
-        query
-      );
+    const user = await getAuthenticatedUser(req);
+
+    const result = await ResumeService.getResumeHistory(user.id, query);
 
     res.status(200).json({
       success: true,
@@ -49,12 +56,14 @@ export const getResumeHistory = async (
 export const getResumeById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
+    const user = await getAuthenticatedUser(req);
+
     const result = await ResumeService.getResumeById(
       req.params.id as string,
-      req.user!.id
+      user.id,
     );
 
     res.status(200).json(result);
@@ -66,12 +75,14 @@ export const getResumeById = async (
 export const deleteResume = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
+    const user = await getAuthenticatedUser(req);
+
     const result = await ResumeService.deleteResume(
       req.params.id as string,
-      req.user!.id
+      user.id,
     );
 
     res.status(200).json(result);

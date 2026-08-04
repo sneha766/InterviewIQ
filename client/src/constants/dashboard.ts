@@ -1,51 +1,53 @@
 import {
-    LayoutDashboard,
-    FileText,
-    Brain,
-    Code2,
-    BarChart3,
-    Settings
+  LayoutDashboard,
+  FileText,
+  Brain,
+  Code2,
+  BarChart3,
+  Settings,
+  CreditCard,
 } from "lucide-react";
 
 export const dashboardLinks = [
-    {
-        title: "Dashboard",
-        icon: LayoutDashboard,
-        path: "/dashboard"
-    },
-    {
-        title: "Resume",
-        icon: FileText,
-        path: "/resume"
-    },
-    {
-        title: "AI Interview",
-        icon: Brain,
-        path: "/interview"
-    },
-    {
-        title: "Coding",
-        icon: Code2,
-        path: "/coding"
-    },
-    {
-        title: "Reports",
-        icon: BarChart3,
-        path: "/reports"
-    },
-    {
-        title: "Settings",
-        icon: Settings,
-        path: "/settings"
-    }
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/dashboard",
+  },
+  {
+    title: "Resume",
+    icon: FileText,
+    path: "/resume",
+  },
+  {
+    title: "AI Interview",
+    icon: Brain,
+    path: "/interview",
+  },
+  {
+    title: "Coding",
+    icon: Code2,
+    path: "/coding",
+  },
+  {
+    title: "Reports",
+    icon: BarChart3,
+    path: "/reports",
+  },
+  {
+    title: "Billing",
+    icon: CreditCard,
+    path: "/billing",
+    
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    path: "/settings",
+  },
 ];
 
-import {
-  FileCheck,
-  BrainCircuit,
-  Trophy,
-  Target,
-} from "lucide-react";
+import { FileCheck, BrainCircuit, Trophy, Target } from "lucide-react";
 
 export const stats = [
   {

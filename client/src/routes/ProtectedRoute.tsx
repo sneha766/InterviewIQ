@@ -1,16 +1,35 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  SignedIn,
+  SignedOut,
+} from "@clerk/clerk-react";
+import {
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 
 export default function ProtectedRoute() {
   return (
     <>
-      <SignedIn>
-        <Outlet />
-      </SignedIn>
+      <ClerkLoading>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        </div>
+      </ClerkLoading>
 
-      <SignedOut>
-        <Navigate to="/login" replace />
-      </SignedOut>
+      <ClerkLoaded>
+        <SignedIn>
+          <Outlet />
+        </SignedIn>
+
+        <SignedOut>
+          <Navigate
+            to="/login"
+            replace
+          />
+        </SignedOut>
+      </ClerkLoaded>
     </>
   );
 }

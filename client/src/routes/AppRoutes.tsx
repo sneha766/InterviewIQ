@@ -13,6 +13,7 @@ import Interview from "../pages/Interview";
 import Coding from "../pages/Coding";
 import Reports from "../pages/Reports";
 import Settings from "../pages/Settings";
+import Billing from "../pages/Billing";
 
 export default function AppRoutes() {
   return (
@@ -35,7 +36,7 @@ export default function AppRoutes() {
             <Route path="/coding" element={<Coding />} />
 
             <Route path="/reports" element={<Reports />} />
-
+            <Route path="/billing" element={<Billing />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>

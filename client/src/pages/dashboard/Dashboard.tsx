@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
 import { FileText, Brain, Target, Trophy } from "lucide-react";
 
+import { Card } from "../../components/ui/card";
+
 import StatsCard from "../../components/dashboard/StatsCard";
 import QuickActions from "../../components/dashboard/QuickActions";
 import RecentInterviews from "../../components/dashboard/RecentInterviews";
 import RecentResumes from "../../components/dashboard/RecentResumes";
 import AISuggestions from "../../components/dashboard/AISuggestions";
 import DashboardSkeleton from "../../components/dashboard/DashboardSkeleton";
+import UpgradeBanner from "../../components/dashboard/UpgradeBanner";
 
 import ResumeTrendChart from "../../components/dashboard/ResumeTrendChart";
 import InterviewTrendChart from "../../components/dashboard/InterviewTrendChart";
@@ -15,18 +18,14 @@ import ScoreDistributionChart from "../../components/dashboard/ScoreDistribution
 
 import { useDashboard } from "../../hooks/useDashboard";
 import { useAnalytics } from "../../hooks/useAnalytics";
-import { useAuth } from "@clerk/clerk-react";
+
 export default function Dashboard() {
-  const { data, isLoading, isError } = useDashboard();
-  
-const { isSignedIn, userId, getToken } = useAuth();
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useDashboard();
 
-console.log("Signed in:", isSignedIn);
-console.log("User ID:", userId);
-
-getToken().then(token => {
-  console.log("Token:", token);
-});
   const {
     data: analytics,
     isLoading: analyticsLoading,
@@ -45,7 +44,6 @@ getToken().then(token => {
     );
   }
 
-  // Dynamic AI Suggestions
   const suggestions: string[] = [];
 
   if (data.overview.averageATS < 75) {
@@ -78,6 +76,10 @@ getToken().then(token => {
     );
   }
 
+  const isNewUser =
+    data.overview.totalResumes === 0 &&
+    analytics.interview.total === 0;
+
   return (
     <motion.div
       className="space-y-10"
@@ -85,27 +87,68 @@ getToken().then(token => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
     >
+      {/* Header */}
+
+      <section className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">
+            Dashboard
+          </h1>
+
+          <p className="mt-2 text-muted-foreground">
+            Track your interview preparation,
+            resume performance, and AI insights.
+          </p>
+        </div>
+      </section>
+
+      {/* Upgrade Banner */}
+
+      <UpgradeBanner />
+
+      {/* Empty State */}
+
+      {isNewUser && (
+        <Card className="p-8 text-center">
+
+          <h2 className="text-2xl font-bold">
+            Welcome to InterviewIQ 🚀
+          </h2>
+
+          <p className="mt-3 text-muted-foreground">
+            Start by uploading your first resume or
+            taking your first AI interview.
+          </p>
+
+          <div className="mt-8">
+            <QuickActions />
+          </div>
+
+        </Card>
+      )}
+
       {/* Statistics */}
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
         <StatsCard
           title="Total Resumes"
           value={String(data.overview.totalResumes)}
-          subtitle="Latest"
+          subtitle="Uploaded"
           icon={FileText}
         />
 
         <StatsCard
           title="Average ATS"
           value={`${data.overview.averageATS}%`}
-          subtitle="Average"
+          subtitle="Average Score"
           icon={Target}
         />
 
         <StatsCard
           title="Interviews"
           value={String(analytics.interview.total)}
-          subtitle={`${analytics.interview.completed} completed`}
+          subtitle={`${analytics.interview.completed} Completed`}
           icon={Brain}
         />
 
@@ -115,42 +158,65 @@ getToken().then(token => {
           subtitle="Average"
           icon={Trophy}
         />
+
       </section>
 
       {/* Charts */}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <ResumeTrendChart data={analytics.resumeTrend} />
 
-        <InterviewTrendChart data={analytics.interviewTrend} />
+        <ResumeTrendChart
+          data={analytics.resumeTrend}
+        />
+
+        <InterviewTrendChart
+          data={analytics.interviewTrend}
+        />
+
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <MonthlyActivityChart data={analytics.monthlyActivity} />
 
-        <ScoreDistributionChart data={analytics.scoreDistribution} />
+        <MonthlyActivityChart
+          data={analytics.monthlyActivity}
+        />
+
+        <ScoreDistributionChart
+          data={analytics.scoreDistribution}
+        />
+
       </section>
 
       {/* Quick Actions */}
 
       <section>
+
         <h2 className="mb-5 text-2xl font-bold">
           Quick Actions
         </h2>
 
         <QuickActions />
+
       </section>
 
-      {/* Bottom Grid */}
+      {/* Bottom Section */}
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <RecentResumes resumes={data.recentResumes} />
 
-        {/* Add interview data here once your backend exposes recentInterviews */}
-        
+        <RecentResumes
+          resumes={data.recentResumes}
+        />
 
-        <AISuggestions suggestions={suggestions} />
+        <RecentInterviews
+          interviews={data.recentInterviews ?? []}
+        />
+
+        <AISuggestions
+          suggestions={suggestions}
+        />
+
       </section>
+
     </motion.div>
   );
 }

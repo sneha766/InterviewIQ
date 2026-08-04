@@ -1,6 +1,11 @@
 import {
-    requireAuth,
-    getAuth,
+  requireAuth,
+  getAuth,
+  clerkMiddleware,
 } from "@clerk/express";
 
-export { requireAuth, getAuth };
+export {
+  clerkMiddleware,
+  requireAuth,
+  getAuth,
+};

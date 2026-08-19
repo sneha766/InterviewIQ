@@ -1,4 +1,9 @@
 {
+  "name": "interviewiq",
+  "private": true,
+  "scripts": {
+    "build": "prisma generate --schema=server/prisma/schema.prisma && npm run build --prefix client"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "prisma": "^6.19.3"

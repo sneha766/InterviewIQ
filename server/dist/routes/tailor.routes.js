@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const upload_middleware_1 = require("../middleware/upload.middleware");
+const tailor_controller_1 = require("../controllers/tailor.controller");
+const usage_middleware_1 = require("../middleware/usage.middleware");
+const clerk_middleware_1 = require("../middleware/clerk.middleware");
+const router = (0, express_1.Router)();
+router.post("/", (0, clerk_middleware_1.requireAuth)(), usage_middleware_1.checkTailorLimit, upload_middleware_1.upload.single("resume"), tailor_controller_1.tailorResume);
+exports.default = router;

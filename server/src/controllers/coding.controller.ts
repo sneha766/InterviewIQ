@@ -6,6 +6,9 @@ import { getAuthenticatedUser } from "../utils/auth";
 import {
   RunCodeSchema,
   SubmitCodeSchema,
+  GenerateReviewSchema,
+  GenerateHintsSchema,
+  CodingChatSchema,
 } from "../schemas/coding.schema";
 
 export const getProblems = async (
@@ -32,7 +35,7 @@ export const getProblemBySlug = async (
 ) => {
   try {
     const problem = await CodingService.getProblemBySlug(
-      req.params.slug
+      req.params.slug as string
     );
 
     res.status(200).json({
@@ -125,13 +128,95 @@ export const getSubmission = async (
 
     const submission =
       await CodingService.getSubmission(
-        req.params.id,
+        req.params.id as string,
         user.id
       );
 
     res.status(200).json({
       success: true,
       data: submission,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCodingReports = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await getAuthenticatedUser(req);
+
+    const reports = await CodingService.getCodingReports(user.id);
+
+    res.status(200).json({
+      success: true,
+      data: reports,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await getAuthenticatedUser(req);
+
+    const body = GenerateReviewSchema.parse(req.body);
+
+    const review = await CodingService.generateReview(body);
+
+    res.status(200).json({
+      success: true,
+      data: review,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateHints = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await getAuthenticatedUser(req);
+
+    const body = GenerateHintsSchema.parse(req.body);
+
+    const hints = await CodingService.generateHints(body);
+
+    res.status(200).json({
+      success: true,
+      data: hints,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const codingChat = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await getAuthenticatedUser(req);
+
+    const body = CodingChatSchema.parse(req.body);
+
+    const reply = await CodingService.sendChatMessage(body);
+
+    res.status(200).json({
+      success: true,
+      data: reply,
     });
   } catch (error) {
     next(error);

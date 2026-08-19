@@ -13,6 +13,16 @@ export interface RecentResume {
   createdAt: Date;
 }
 
+export interface RecentInterview {
+  id: string;
+  role: string;
+  type: string;
+  difficulty: string;
+  score: number | null;
+  completed: boolean;
+  createdAt: Date;
+}
+
 export interface ScoreDistribution {
   excellent: number;
   good: number;
@@ -20,8 +30,16 @@ export interface ScoreDistribution {
   poor: number;
 }
 
+export interface DashboardCodingStats {
+  problemsSolved: number;
+  acceptanceRate: number;
+  streak: number;
+}
+
 export interface DashboardResponse {
   overview: DashboardOverview;
   recentResumes: RecentResume[];
+  recentInterviews: RecentInterview[];
   scoreDistribution: ScoreDistribution;
+  codingStats?: DashboardCodingStats;
 }

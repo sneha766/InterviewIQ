@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../lib/prisma";
 import AppError from "../utils/AppError";
+import { getAuthenticatedUser } from "../utils/auth";
 
 function getToday() {
   const today = new Date();
@@ -41,7 +42,8 @@ export const checkResumeLimit = async (
   next: NextFunction
 ) => {
   try {
-    const { plan, usage } = await getUserUsage(req.user!.id);
+    const user = await getAuthenticatedUser(req);
+    const { plan, usage } = await getUserUsage(user.id);
 
     if (plan === "PRO") {
       return next();
@@ -66,7 +68,8 @@ export const checkInterviewLimit = async (
   next: NextFunction
 ) => {
   try {
-    const { plan, usage } = await getUserUsage(req.user!.id);
+    const user = await getAuthenticatedUser(req);
+    const { plan, usage } = await getUserUsage(user.id);
 
     if (plan === "PRO") {
       return next();
@@ -91,7 +94,8 @@ export const checkTailorLimit = async (
   next: NextFunction
 ) => {
   try {
-    const { plan, usage } = await getUserUsage(req.user!.id);
+    const user = await getAuthenticatedUser(req);
+    const { plan, usage } = await getUserUsage(user.id);
 
     if (plan === "PRO") {
       return next();

@@ -7,140 +7,48 @@ exports.deleteResume = exports.getResumeById = exports.getResumeHistory = export
 const promises_1 = __importDefault(require("fs/promises"));
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const AppError_1 = __importDefault(require("../utils/AppError"));
-const cloudinary_service_1 = require("./cloudinary.service");
-const resume_schema_1 = require("../schemas/resume.schema");
 const pdfExtractor_1 = require("../utils/pdfExtractor");
+const cloudinary_service_1 = require("./cloudinary.service");
 const resumeAnalyzer_1 = require("../ai/resumeAnalyzer");
-const buildPrompt = () => `
-You are an expert ATS Resume Reviewer and Senior Technical Recruiter.
-
-Analyze the uploaded resume thoroughly.
-
-Return ONLY valid JSON.
-
-Return the response in exactly this format:
-
-{
-  "overallScore": 87,
-
-  "summary": "",
-
-  "sectionScores": {
-    "contactInfo": 0,
-    "summary": 0,
-    "skills": 0,
-    "experience": 0,
-    "projects": 0,
-    "education": 0,
-    "certifications": 0
-  },
-
-  "strengths": [],
-
-  "weaknesses": [],
-
-  "missingKeywords": [],
-
-  "technicalSkills": [],
-
-  "softSkills": [],
-
-  "projects": [
-    {
-      "name": "",
-      "feedback": ""
-    }
-  ],
-
-  "experience": [
-    {
-      "company": "",
-      "feedback": ""
-    }
-  ],
-
-  "atsIssues": [],
-
-  "formattingSuggestions": [],
-
-  "improvementSuggestions": [],
-
-  "finalVerdict": ""
-}
-
-IMPORTANT:
-
-- Return ONLY valid JSON.
-- Do NOT wrap the JSON in markdown code fences.
-- Do NOT include the word "json" before the response.
-- Every key must exist.
-- Never return null.
-- If any value is unavailable:
-  - use "" for strings
-  - use 0 for numbers
-  - use [] for arrays
-`;
-const parseGeminiResponse = (text) => {
-    const cleaned = text
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-    try {
-        return JSON.parse(cleaned);
-    }
-    catch {
-        console.error("Invalid Gemini Response:\n", cleaned);
-        throw new AppError_1.default("Gemini returned an invalid JSON response.", 500);
-    }
-};
+const usage_1 = require("../utils/usage");
+const resume_schema_1 = require("../schemas/resume.schema");
+const ai_service_1 = require("./ai.service");
+const usageGuard_service_1 = require("./usageGuard.service");
 /**
  * Analyze Resume
  */
-const analyzeResume = async (req) => {
-    if (!req.file) {
+const analyzeResume = async (input) => {
+    const { file, userId } = input;
+    await (0, usageGuard_service_1.checkResumeLimit)(userId);
+    if (!file) {
         throw new AppError_1.default("Please upload a resume.", 400);
     }
     try {
-        /**
-         * Extract text from PDF
-         */
-        const resumeText = await (0, pdfExtractor_1.extractPdfText)(req.file.path);
+        const resumeText = await (0, pdfExtractor_1.extractPdfText)(file.path);
         if (!resumeText.trim()) {
-            throw new AppError_1.default("Unable to extract text from the uploaded resume.", 400);
+            throw new AppError_1.default("Unable to extract text from uploaded resume.", 400);
         }
-        /**
-         * Analyze Resume
-         */
-        const analysis = resume_schema_1.ResumeAnalysisSchema.parse(await (0, resumeAnalyzer_1.analyzeResumeText)(resumeText));
-        /**
-         * Upload original PDF
-         */
-        const cloudinaryFile = await (0, cloudinary_service_1.uploadPdfToCloudinary)(req.file.path);
-        /**
-         * Save Analysis
-         */
+        const analysis = await (0, ai_service_1.generateStructuredOutput)(() => (0, resumeAnalyzer_1.analyzeResumeText)(resumeText), resume_schema_1.ResumeAnalysisSchema);
+        const uploaded = await (0, cloudinary_service_1.uploadPdfToCloudinary)(file.path);
         const savedResume = await prisma_1.default.resumeAnalysis.create({
             data: {
-                fileName: req.file.originalname,
-                fileUrl: cloudinaryFile.secure_url,
+                fileName: file.originalname,
+                fileUrl: uploaded.secure_url,
                 overallScore: analysis.overallScore,
-                analysis,
-                userId: req.user.id,
+                analysis: analysis,
+                userId,
             },
         });
-        return {
-            success: true,
-            message: "Resume analyzed successfully.",
-            data: savedResume,
-        };
+        await (0, usage_1.incrementResumeUsage)(userId);
+        return savedResume;
     }
     finally {
-        if (req.file?.path) {
+        if (file.path) {
             try {
-                await promises_1.default.unlink(req.file.path);
+                await promises_1.default.unlink(file.path);
             }
-            catch (error) {
-                console.error("Failed to delete temporary file:", error);
+            catch {
+                // Ignore cleanup errors
             }
         }
     }
@@ -150,7 +58,7 @@ exports.analyzeResume = analyzeResume;
  * Resume History
  */
 const getResumeHistory = async (userId, query) => {
-    const { page, limit, search, sortBy, order, minScore, maxScore, } = query;
+    const { page, limit, search, sortBy, order, minScore, maxScore, startDate, endDate, } = query;
     const where = {
         userId,
     };
@@ -160,8 +68,7 @@ const getResumeHistory = async (userId, query) => {
             mode: "insensitive",
         };
     }
-    if (minScore !== undefined ||
-        maxScore !== undefined) {
+    if (minScore !== undefined || maxScore !== undefined) {
         where.overallScore = {};
         if (minScore !== undefined) {
             where.overallScore.gte = minScore;
@@ -170,10 +77,16 @@ const getResumeHistory = async (userId, query) => {
             where.overallScore.lte = maxScore;
         }
     }
-    const [totalItems, resumes] = await Promise.all([
-        prisma_1.default.resumeAnalysis.count({
-            where,
-        }),
+    if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) {
+            where.createdAt.gte = new Date(startDate);
+        }
+        if (endDate) {
+            where.createdAt.lte = new Date(endDate);
+        }
+    }
+    const [items, totalItems] = await prisma_1.default.$transaction([
         prisma_1.default.resumeAnalysis.findMany({
             where,
             skip: (page - 1) * limit,
@@ -187,16 +100,22 @@ const getResumeHistory = async (userId, query) => {
                 fileUrl: true,
                 overallScore: true,
                 createdAt: true,
+                updatedAt: true,
             },
+        }),
+        prisma_1.default.resumeAnalysis.count({
+            where,
         }),
     ]);
     return {
-        resumes,
+        items,
         pagination: {
             page,
             limit,
             totalItems,
             totalPages: Math.ceil(totalItems / limit),
+            hasNextPage: page < Math.ceil(totalItems / limit),
+            hasPreviousPage: page > 1,
         },
     };
 };
@@ -205,40 +124,30 @@ exports.getResumeHistory = getResumeHistory;
  * Get Resume By Id
  */
 const getResumeById = async (id, userId) => {
-    const resume = await prisma_1.default.resumeAnalysis.findFirst({
+    const resume = await prisma_1.default.resumeAnalysis.findUnique({
         where: {
             id,
-            userId,
         },
     });
-    if (!resume) {
+    if (!resume || resume.userId !== userId) {
         throw new AppError_1.default("Resume not found.", 404);
     }
-    return {
-        success: true,
-        message: "Resume fetched successfully.",
-        data: resume,
-    };
+    return resume;
 };
 exports.getResumeById = getResumeById;
 /**
  * Delete Resume
  */
 const deleteResume = async (id, userId) => {
-    const resume = await prisma_1.default.resumeAnalysis.findFirst({
+    const deleted = await prisma_1.default.resumeAnalysis.deleteMany({
         where: {
             id,
             userId,
         },
     });
-    if (!resume) {
+    if (deleted.count === 0) {
         throw new AppError_1.default("Resume not found.", 404);
     }
-    await prisma_1.default.resumeAnalysis.delete({
-        where: {
-            id,
-        },
-    });
     return {
         success: true,
         message: "Resume deleted successfully.",

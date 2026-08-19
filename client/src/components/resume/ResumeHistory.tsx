@@ -16,12 +16,7 @@ import { Button } from "../ui/button";
 
 import { Input } from "../ui/input";
 
-interface ResumeHistoryItem {
-  id: string;
-  fileName: string;
-  overallScore: number;
-  createdAt: string;
-}
+import type { ResumeHistoryItem } from "@/types/resume";
 
 interface ResumeHistoryProps {
   resumes: ResumeHistoryItem[];
@@ -276,10 +271,8 @@ export default function ResumeHistory({
           {filteredResumes.map(
             (resume, index) => {
 
-              const badge =
-                getBadge(
-                  resume.overallScore
-                );
+              const score = resume.overallScore ?? resume.score ?? 0;
+              const badge = getBadge(score);
 
               return (
 
@@ -333,7 +326,7 @@ export default function ResumeHistory({
 
                           <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold">
 
-                            ATS {resume.overallScore}
+                            ATS {score}
 
                           </span>
 
@@ -344,7 +337,7 @@ export default function ResumeHistory({
                           <Calendar className="h-4 w-4"/>
 
                           {new Date(
-                            resume.createdAt
+                            resume.createdAt ?? resume.uploadedAt ?? Date.now()
                           ).toLocaleDateString()}
 
                         </div>
@@ -465,11 +458,11 @@ export default function ResumeHistory({
 
                       <h3 className="mt-3 text-xl font-semibold">
 
-                        {resume.overallScore >= 90
+                        {score >= 90
                           ? "Ready to Apply"
-                          : resume.overallScore >= 80
+                          : score >= 80
                           ? "Minor Improvements"
-                          : resume.overallScore >= 70
+                          : score >= 70
                           ? "Needs Optimization"
                           : "Revise Resume"}
 

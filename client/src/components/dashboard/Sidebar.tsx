@@ -35,7 +35,10 @@ export default function Sidebar() {
 
                     const Icon = item.icon;
 
-                    const active = location.pathname === item.path;
+                    const active =
+                      item.path === "/dashboard"
+                        ? location.pathname === item.path
+                        : location.pathname.startsWith(item.path);
 
                     return (
 

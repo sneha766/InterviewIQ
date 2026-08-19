@@ -32,13 +32,25 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteResume = exports.getResumeById = exports.getResumeHistory = exports.analyzeResume = void 0;
 const ResumeService = __importStar(require("../services/resume.service"));
 const resumeHistory_1 = require("../schemas/resumeHistory");
+const auth_1 = require("../utils/auth");
+const AppError_1 = __importDefault(require("../utils/AppError"));
 const analyzeResume = async (req, res, next) => {
     try {
-        const result = await ResumeService.analyzeResume(req);
+        const user = await (0, auth_1.getAuthenticatedUser)(req);
+        if (!req.file) {
+            throw new AppError_1.default("Resume is required.", 400);
+        }
+        const result = await ResumeService.analyzeResume({
+            userId: user.id,
+            file: req.file,
+        });
         res.status(201).json({
             success: true,
             data: result,
@@ -52,11 +64,12 @@ exports.analyzeResume = analyzeResume;
 const getResumeHistory = async (req, res, next) => {
     try {
         const query = resumeHistory_1.ResumeHistoryQuerySchema.parse(req.query);
-        const history = await ResumeService.getResumeHistory(req.user.id, query);
+        const user = await (0, auth_1.getAuthenticatedUser)(req);
+        const result = await ResumeService.getResumeHistory(user.id, query);
         res.status(200).json({
             success: true,
             message: "Resume history fetched successfully.",
-            data: history,
+            ...result,
         });
     }
     catch (error) {
@@ -64,13 +77,25 @@ const getResumeHistory = async (req, res, next) => {
     }
 };
 exports.getResumeHistory = getResumeHistory;
-const getResumeById = async (req, res) => {
-    const result = await ResumeService.getResumeById(req.params.id, req.user.id);
-    res.status(200).json(result);
+const getResumeById = async (req, res, next) => {
+    try {
+        const user = await (0, auth_1.getAuthenticatedUser)(req);
+        const result = await ResumeService.getResumeById(req.params.id, user.id);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
 exports.getResumeById = getResumeById;
-const deleteResume = async (req, res) => {
-    const result = await ResumeService.deleteResume(req.params.id, req.user.id);
-    res.status(200).json(result);
+const deleteResume = async (req, res, next) => {
+    try {
+        const user = await (0, auth_1.getAuthenticatedUser)(req);
+        const result = await ResumeService.deleteResume(req.params.id, user.id);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
 exports.deleteResume = deleteResume;

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const usage_middleware_1 = require("../middleware/usage.middleware");
+const interview_controller_1 = require("../controllers/interview.controller");
+const clerk_middleware_1 = require("../middleware/clerk.middleware");
+const router = (0, express_1.Router)();
+router.post("/", (0, clerk_middleware_1.requireAuth)(), usage_middleware_1.checkInterviewLimit, interview_controller_1.createInterview);
+router.post("/:id/submit", (0, clerk_middleware_1.requireAuth)(), interview_controller_1.submitInterview);
+router.get("/", (0, clerk_middleware_1.requireAuth)(), interview_controller_1.getInterviewHistory);
+router.get("/:id", (0, clerk_middleware_1.requireAuth)(), interview_controller_1.getInterviewById);
+router.delete("/:id", (0, clerk_middleware_1.requireAuth)(), interview_controller_1.deleteInterview);
+exports.default = router;

@@ -28,6 +28,15 @@ interface CodingTestCasesProps {
   onRunTest: (id: string) => void;
   onAddTest: () => void;
   onDeleteTest: (id: string) => void;
+
+  /** Custom test case panel — optional, defaults keep the panel inert. */
+  customInput?: string;
+  customExpectedOutput?: string;
+  onCustomInputChange?: (value: string) => void;
+  onCustomExpectedOutputChange?: (value: string) => void;
+  onRunCustomTest?: () => void;
+  onAddCustomTest?: () => void;
+  isRunningCustomTest?: boolean;
 }
 
 export default function CodingTestCases({
@@ -35,6 +44,14 @@ export default function CodingTestCases({
   onRunTest,
   onAddTest,
   onDeleteTest,
+
+  customInput = "",
+  customExpectedOutput = "",
+  onCustomInputChange,
+  onCustomExpectedOutputChange,
+  onRunCustomTest,
+  onAddCustomTest,
+  isRunningCustomTest = false,
 }: CodingTestCasesProps) {
   const [expanded, setExpanded] = useState<string | null>(
     testCases[0]?.id ?? null
@@ -281,6 +298,10 @@ export default function CodingTestCases({
 nums = [2,7,11,15]
 target = 9`}
               className="min-h-[180px]"
+              value={customInput}
+              onChange={(e) =>
+                onCustomInputChange?.(e.target.value)
+              }
             />
 
           </div>
@@ -295,6 +316,10 @@ target = 9`}
               placeholder={`Example:
 [0,1]`}
               className="min-h-[180px]"
+              value={customExpectedOutput}
+              onChange={(e) =>
+                onCustomExpectedOutputChange?.(e.target.value)
+              }
             />
 
           </div>
@@ -303,21 +328,34 @@ target = 9`}
 
         <div className="flex flex-wrap gap-3">
 
-          <Button>
+          <Button
+            onClick={onRunCustomTest}
+            disabled={isRunningCustomTest || !customInput}
+          >
 
             <Play className="mr-2 h-4 w-4" />
 
-            Run Custom Test
+            {isRunningCustomTest ? "Running..." : "Run Custom Test"}
 
           </Button>
 
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={onAddCustomTest}
+            disabled={!customInput}
+          >
 
             Add To Test Cases
 
           </Button>
 
-          <Button variant="secondary">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              onCustomInputChange?.("");
+              onCustomExpectedOutputChange?.("");
+            }}
+          >
 
             Clear
 

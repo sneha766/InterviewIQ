@@ -10,4 +10,6 @@ export interface ResumeHistoryItem {
   fileName: string;
   score: number;
   uploadedAt: string;
+  overallScore?: number;
+  createdAt?: string;
 }

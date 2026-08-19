@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Crown } from "lucide-react";

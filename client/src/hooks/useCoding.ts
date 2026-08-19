@@ -7,6 +7,7 @@ import {
   getProblems,
   getSubmission,
   getSubmissionHistory,
+  getCodingReports,
   generateReview,
   generateHints,
 } from "@/services/coding.service";
@@ -14,6 +15,8 @@ import {
 import type {
   RunCodePayload,
   SubmitCodePayload,
+  GenerateReviewPayload,
+  GenerateHintsPayload,
 } from "@/services/coding.service";
 
 /* ============================
@@ -42,13 +45,18 @@ export function useSubmissionHistory() {
   });
 }
 
-export function useSubmission(
-  id: string
-) {
+export function useSubmission(id: string) {
   return useQuery({
     queryKey: ["submission", id],
     queryFn: () => getSubmission(id),
     enabled: !!id,
+  });
+}
+
+export function useCodingReports() {
+  return useQuery({
+    queryKey: ["coding-reports"],
+    queryFn: getCodingReports,
   });
 }
 
@@ -64,20 +72,18 @@ export function useRunCode() {
 
 export function useSubmitCode() {
   return useMutation({
-    mutationFn: (payload: SubmitCodePayload) =>
-      submitCode(payload),
+    mutationFn: (payload: SubmitCodePayload) => submitCode(payload),
   });
 }
 
 export function useGenerateReview() {
   return useMutation({
-    mutationFn: (code: string) => generateReview(code),
+    mutationFn: (payload: GenerateReviewPayload) => generateReview(payload),
   });
 }
 
 export function useGenerateHints() {
   return useMutation({
-    mutationFn: (problemId: string) =>
-      generateHints(problemId),
+    mutationFn: (payload: GenerateHintsPayload) => generateHints(payload),
   });
 }

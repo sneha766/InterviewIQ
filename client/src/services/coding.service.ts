@@ -24,20 +24,30 @@ export interface RunCodeResult {
   executionTime: string;
   memory: string;
   status: "idle" | "success" | "error";
+  verdictStatus?: string;
+}
+
+export type CodingDifficulty = "Easy" | "Medium" | "Hard";
+
+export interface CodingExample {
+  input: string;
+  output: string;
+  explanation?: string;
 }
 
 export interface CodingProblem {
   id: string;
   title: string;
   slug: string;
-  difficulty: string;
+  difficulty: CodingDifficulty;
   acceptanceRate: number;
   description: string;
-  examples: any[];
+  examples: CodingExample[];
   constraints: string[];
   hints: string[];
   tags: string[];
   starterCode?: Record<string, string>;
+  testCases?: Array<{ id: string; input: string; expectedOutput: string }>;
 }
 
 export interface CodingSubmission {
@@ -57,8 +67,33 @@ export interface CodingSubmission {
     id: string;
     title: string;
     slug: string;
-    difficulty: string;
+    difficulty: CodingDifficulty;
   };
+}
+
+export interface CodingReportsResult {
+  totalProblemsAttempted: number;
+  problemsSolved: number;
+  problemsFailed: number;
+  acceptanceRate: number;
+  totalSubmissions: number;
+  streak: number;
+  difficultySolved: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
+  languageUsage: Array<{ language: string; count: number }>;
+  topicPerformance: Array<{ topic: string; solved: number }>;
+  recentSubmissions: Array<{
+    id: string;
+    problemId: string;
+    language: string;
+    status: string;
+    runtime: string;
+    memory: string;
+    createdAt: string;
+  }>;
 }
 
 /* ===========================
@@ -122,31 +157,84 @@ export async function getSubmission(id: string) {
 }
 
 /* ===========================
+   Reports
+=========================== */
+
+export async function getCodingReports() {
+  const { data } = await api.get("/coding/reports");
+  return data.data as CodingReportsResult;
+}
+
+/* ===========================
    AI
 =========================== */
 
+export interface CodeReviewRecommendation {
+  type: "success" | "warning" | "info";
+  title: string;
+  description: string;
+}
+
+export interface CodeReviewResult {
+  score: number;
+  readability: number;
+  maintainability: number;
+  bugs: number;
+  complexity: string;
+  spaceComplexity: string;
+  security: string;
+  strengths: string[];
+  improvements: string[];
+  recommendations: CodeReviewRecommendation[];
+}
+
+export interface GenerateReviewPayload {
+  language: string;
+  code: string;
+  problemId?: string;
+}
+
+export interface GenerateHintsPayload {
+  problemId: string;
+  code?: string;
+}
+
+export interface CodingChatPayload {
+  problemId?: string;
+  language: string;
+  code: string;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
+}
+
 export async function generateReview(
-  code: string
+  payload: GenerateReviewPayload
 ) {
   const { data } = await api.post(
     "/coding/review",
-    {
-      code,
-    }
+    payload
   );
 
-  return data.data;
+  return data.data as CodeReviewResult;
 }
 
 export async function generateHints(
-  problemId: string
+  payload: GenerateHintsPayload
 ) {
   const { data } = await api.post(
     "/coding/hints",
-    {
-      problemId,
-    }
+    payload
   );
 
-  return data.data;
+  return data.data as { hints: string[] };
+}
+
+export async function sendCodingChat(
+  payload: CodingChatPayload
+) {
+  const { data } = await api.post(
+    "/coding/chat",
+    payload
+  );
+
+  return data.data as { role: "assistant"; content: string };
 }

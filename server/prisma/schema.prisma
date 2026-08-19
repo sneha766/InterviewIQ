@@ -135,6 +135,7 @@ model CodingProblem {
   updatedAt DateTime @updatedAt
 
   submissions CodingSubmission[]
+  testCases   CodingTestCase[]
 
   @@index([difficulty])
 }
@@ -168,3 +169,18 @@ model CodingSubmission {
   @@index([createdAt])
   @@index([status])
 }
+
+model CodingTestCase {
+  id             String   @id @default(cuid())
+  problemId      String
+  input          String
+  expectedOutput String
+  isHidden       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  problem CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+}
+

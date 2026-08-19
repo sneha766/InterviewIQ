@@ -5,6 +5,7 @@ import {
   RecentResume,
   RecentInterview,
   ScoreDistribution,
+  DashboardCodingStats,
 } from "../types/dashboard.types";
 
 class DashboardService {
@@ -142,6 +143,34 @@ class DashboardService {
     );
   }
 
+  private async getCodingStats(userId: string): Promise<DashboardCodingStats> {
+    const submissions = await prisma.codingSubmission.findMany({
+      where: { userId },
+      select: { problemId: true, status: true, createdAt: true },
+    });
+
+    const solvedSet = new Set<string>();
+    let acceptedCount = 0;
+
+    for (const sub of submissions) {
+      if (sub.status === "Accepted") {
+        solvedSet.add(sub.problemId);
+        acceptedCount++;
+      }
+    }
+
+    const acceptanceRate =
+      submissions.length > 0
+        ? Number(((acceptedCount / submissions.length) * 100).toFixed(1))
+        : 0;
+
+    return {
+      problemsSolved: solvedSet.size,
+      acceptanceRate,
+      streak: submissions.length > 0 ? 1 : 0,
+    };
+  }
+
   async getDashboard(
     userId: string
   ): Promise<DashboardResponse> {
@@ -150,11 +179,13 @@ class DashboardService {
       recentResumes,
       recentInterviews,
       scoreDistribution,
+      codingStats,
     ] = await Promise.all([
       this.getOverview(userId),
       this.getRecentResumes(userId),
       this.getRecentInterviews(userId),
       this.getScoreDistribution(userId),
+      this.getCodingStats(userId),
     ]);
 
     return {
@@ -162,6 +193,7 @@ class DashboardService {
       recentResumes,
       recentInterviews,
       scoreDistribution,
+      codingStats,
     };
   }
 }

@@ -28,6 +28,7 @@ interface CodingToolbarProps {
   onRun: () => void;
   onSubmit: () => void;
   isRunning?: boolean;
+  isSubmitting?: boolean;
 }
 
 const LANGUAGES = [
@@ -68,6 +69,7 @@ export default function CodingToolbar({
 
   onSubmit,
   isRunning = false,
+  isSubmitting = false,
 }: CodingToolbarProps) {
   const [paused, setPaused] = useState(false);
 
@@ -183,9 +185,10 @@ export default function CodingToolbar({
           <Button
             className="rounded-xl bg-emerald-600 hover:bg-emerald-700"
             onClick={onSubmit}
+            disabled={isSubmitting}
           >
             <Send className="mr-2 h-4 w-4" />
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
 
           <Button variant="outline" className="rounded-xl">

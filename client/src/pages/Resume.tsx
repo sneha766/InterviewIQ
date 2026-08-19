@@ -139,7 +139,7 @@ export default function Resume() {
       )}
 
       <ResumeHistory
-        history={history}
+        resumes={history}
       />
 
     </div>

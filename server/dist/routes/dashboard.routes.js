@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const dashboard_controller_1 = __importDefault(require("../controllers/dashboard.controller"));
-const auth_middleware_1 = require("../middleware/auth.middleware");
+const clerk_middleware_1 = require("../middleware/clerk.middleware");
 const router = (0, express_1.Router)();
-router.get("/", auth_middleware_1.authenticate, dashboard_controller_1.default.getDashboard);
+router.get("/", (0, clerk_middleware_1.requireAuth)(), dashboard_controller_1.default.getDashboard);
 exports.default = router;

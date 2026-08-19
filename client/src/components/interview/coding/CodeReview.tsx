@@ -11,6 +11,12 @@ import {
 } from "lucide-react";
 import { Button } from "../../ui/button";
 
+interface CodeReviewRecommendation {
+  type: "success" | "warning" | "info";
+  title: string;
+  description: string;
+}
+
 interface CodeReviewProps {
   score: number;
   readability: number;
@@ -18,7 +24,48 @@ interface CodeReviewProps {
   bugs: number;
   complexity: string;
   security: string;
+
+  /** Optional — real AI output. Component falls back to sample data if omitted. */
+  spaceComplexity?: string;
+  strengths?: string[];
+  improvements?: string[];
+  recommendations?: CodeReviewRecommendation[];
 }
+
+const DEFAULT_RECOMMENDATIONS: CodeReviewRecommendation[] = [
+  {
+    type: "success",
+    title: "Excellent readability",
+    description:
+      "Your code is easy to understand with meaningful variable names.",
+  },
+  {
+    type: "warning",
+    title: "Optimize nested loops",
+    description: "A hash map can reduce the overall runtime complexity.",
+  },
+  {
+    type: "info",
+    title: "Improve edge case handling",
+    description: "Handle empty input and duplicate values before processing.",
+  },
+];
+
+const DEFAULT_STRENGTHS = [
+  "Clean and readable code",
+  "Good algorithm selection",
+  "Efficient runtime",
+  "Consistent coding style",
+  "Good modularization",
+];
+
+const DEFAULT_IMPROVEMENTS = [
+  "Discuss complexity earlier",
+  "Validate edge cases first",
+  "Explain trade-offs clearly",
+  "Reduce unnecessary iterations",
+  "Add more defensive checks",
+];
 
 export default function CodeReview({
   score,
@@ -27,6 +74,10 @@ export default function CodeReview({
   bugs,
   complexity,
   security,
+  spaceComplexity = "O(1)",
+  strengths = DEFAULT_STRENGTHS,
+  improvements = DEFAULT_IMPROVEMENTS,
+  recommendations = DEFAULT_RECOMMENDATIONS,
 }: CodeReviewProps) {
   return (
     <motion.section
@@ -184,7 +235,7 @@ export default function CodeReview({
               </span>
 
               <span className="rounded-full bg-violet-100 px-3 py-1 font-semibold text-violet-700">
-                O(1)
+                {spaceComplexity}
               </span>
 
             </div>
@@ -288,23 +339,7 @@ export default function CodeReview({
 
         <div className="mt-6 space-y-4">
 
-          {[
-            {
-              type: "success",
-              title: "Excellent readability",
-              desc: "Your code is easy to understand with meaningful variable names.",
-            },
-            {
-              type: "warning",
-              title: "Optimize nested loops",
-              desc: "A hash map can reduce the overall runtime complexity.",
-            },
-            {
-              type: "info",
-              title: "Improve edge case handling",
-              desc: "Handle empty input and duplicate values before processing.",
-            },
-          ].map(item => (
+          {recommendations.map(item => (
 
             <div
               key={item.title}
@@ -322,7 +357,7 @@ export default function CodeReview({
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {item.desc}
+                {item.description}
               </p>
 
             </div>
@@ -431,11 +466,9 @@ export default function CodeReview({
 
             <ul className="mt-5 space-y-3 text-muted-foreground">
 
-              <li>✓ Clean and readable code</li>
-              <li>✓ Good algorithm selection</li>
-              <li>✓ Efficient runtime</li>
-              <li>✓ Consistent coding style</li>
-              <li>✓ Good modularization</li>
+              {strengths.map((item) => (
+                <li key={item}>✓ {item}</li>
+              ))}
 
             </ul>
 
@@ -449,11 +482,9 @@ export default function CodeReview({
 
             <ul className="mt-5 space-y-3 text-muted-foreground">
 
-              <li>• Discuss complexity earlier</li>
-              <li>• Validate edge cases first</li>
-              <li>• Explain trade-offs clearly</li>
-              <li>• Reduce unnecessary iterations</li>
-              <li>• Add more defensive checks</li>
+              {improvements.map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
 
             </ul>
 
@@ -621,7 +652,7 @@ export default function CodeReview({
           ].map(([title, ok]) => (
 
             <div
-              key={title}
+              key={String(title)}
               className="flex items-center justify-between rounded-2xl border bg-slate-50 p-5"
             >
 
@@ -662,7 +693,7 @@ export default function CodeReview({
           ].map(([letter, name, ok]) => (
 
             <div
-              key={letter}
+              key={String(letter)}
               className="rounded-2xl border bg-slate-50 p-5 text-center"
             >
 

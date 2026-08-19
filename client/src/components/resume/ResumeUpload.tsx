@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
-  FileText,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -73,7 +72,7 @@ export default function ResumeUpload({
   const [progress, setProgress] =
     useState(0);
 
-  const [dragCounter, setDragCounter] =
+  const [_dragCounter, setDragCounter] =
     useState(0);
 
   const uploadTime = useMemo(() => {

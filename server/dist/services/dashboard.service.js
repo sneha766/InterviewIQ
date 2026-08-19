@@ -23,7 +23,9 @@ class DashboardService {
                 },
             }),
             prisma_1.default.resumeAnalysis.findFirst({
-                where: { userId },
+                where: {
+                    userId,
+                },
                 orderBy: {
                     createdAt: "desc",
                 },
@@ -59,6 +61,26 @@ class DashboardService {
             },
         });
     }
+    async getRecentInterviews(userId) {
+        return prisma_1.default.interview.findMany({
+            where: {
+                userId,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+            take: 5,
+            select: {
+                id: true,
+                role: true,
+                type: true,
+                difficulty: true,
+                score: true,
+                completed: true,
+                createdAt: true,
+            },
+        });
+    }
     async getScoreDistribution(userId) {
         const resumes = await prisma_1.default.resumeAnalysis.findMany({
             where: {
@@ -70,14 +92,18 @@ class DashboardService {
         });
         return resumes.reduce((distribution, resume) => {
             const score = resume.overallScore;
-            if (score >= 90)
+            if (score >= 90) {
                 distribution.excellent++;
-            else if (score >= 75)
+            }
+            else if (score >= 75) {
                 distribution.good++;
-            else if (score >= 60)
+            }
+            else if (score >= 60) {
                 distribution.average++;
-            else
+            }
+            else {
                 distribution.poor++;
+            }
             return distribution;
         }, {
             excellent: 0,
@@ -86,16 +112,42 @@ class DashboardService {
             poor: 0,
         });
     }
+    async getCodingStats(userId) {
+        const submissions = await prisma_1.default.codingSubmission.findMany({
+            where: { userId },
+            select: { problemId: true, status: true, createdAt: true },
+        });
+        const solvedSet = new Set();
+        let acceptedCount = 0;
+        for (const sub of submissions) {
+            if (sub.status === "Accepted") {
+                solvedSet.add(sub.problemId);
+                acceptedCount++;
+            }
+        }
+        const acceptanceRate = submissions.length > 0
+            ? Number(((acceptedCount / submissions.length) * 100).toFixed(1))
+            : 0;
+        return {
+            problemsSolved: solvedSet.size,
+            acceptanceRate,
+            streak: submissions.length > 0 ? 1 : 0,
+        };
+    }
     async getDashboard(userId) {
-        const [overview, recentResumes, scoreDistribution] = await Promise.all([
+        const [overview, recentResumes, recentInterviews, scoreDistribution, codingStats,] = await Promise.all([
             this.getOverview(userId),
             this.getRecentResumes(userId),
+            this.getRecentInterviews(userId),
             this.getScoreDistribution(userId),
+            this.getCodingStats(userId),
         ]);
         return {
             overview,
             recentResumes,
+            recentInterviews,
             scoreDistribution,
+            codingStats,
         };
     }
 }

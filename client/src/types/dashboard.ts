@@ -21,8 +21,15 @@ export interface DashboardOverview {
   averageInterviewScore: number;
 }
 
+export interface DashboardCodingStats {
+  problemsSolved: number;
+  acceptanceRate: number;
+  streak: number;
+}
+
 export interface DashboardResponse {
   overview: DashboardOverview;
   recentResumes: RecentResume[];
   recentInterviews: RecentInterview[];
+  codingStats?: DashboardCodingStats;
 }

@@ -2,6 +2,7 @@
   "name": "interviewiq",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate --schema=server/prisma/schema.prisma",
     "build": "prisma generate --schema=server/prisma/schema.prisma && npm run build --prefix client"
   },
   "dependencies": {

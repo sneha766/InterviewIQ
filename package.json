@@ -1,13 +1,9 @@
 {
-  "name": "interviewiq",
+  "name": "interviewiq-server",
   "private": true,
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
-    "postinstall": "npx prisma generate --schema=server/prisma/schema.prisma",
-    "build": "npx prisma generate --schema=server/prisma/schema.prisma && npm run build --prefix client"
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "@clerk/express": "^2.1.43",
